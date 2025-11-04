@@ -17,6 +17,18 @@ Contributors names and contact info
  
  [Lee Vera]()
 
+## Installing/Using
+
+In Terminal/Command line navigate to the directory you cloned to and run the command
+
+```pip install -e .```
+
+you can now run the project with the command (debug is optional)
+
+```flask app flaskr run --debug```
+
+This will host the app locally at https://127.0.0.1:5000. any changes you make will update on the local dev site in real time.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details
