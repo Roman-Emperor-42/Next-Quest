@@ -1,0 +1,66 @@
+#1. User Registration
+@app.post("/users/register")
+def register_user(data):
+    if username_exists(data.username) or email_exists(data.email):
+        return error("User already exists")
+
+    if not valid_password(data.password):
+        return error("Invalid password")
+
+    user_id = insert_user_basic_info(data)
+    publish_event("UserRegistered", { "user_id": user_id })
+
+    return { "user_id": user_id }
+
+#2. Get Public User Profile
+@app.get("/users/{id}/profile")
+def get_user_profile(id):
+    profile = read_user_profile_view(id)
+
+    if profile is None:
+        return error("User not found")
+
+    return profile
+
+#3. Get Game Details
+@app.get("/games/{id}")
+def get_game_details(id):
+    game = read_game_details_view(id)
+
+    if game is None:
+        return error("Game not found")
+
+    return game
+
+#4  Search Games
+@app.get("/search")
+def search_games(params):
+    results = search_game_index(params.query, params.genre)
+    return results
+
+#5 Purchase Game
+@app.post("/users/{id}/purchase")
+def purchase_game(id, data):
+    if not user_exists(id):
+        return error("User not found")
+
+    if not game_exists(data.game_id):
+        return error("Game not found")
+
+    if not validate_payment(data.payment_info):
+        return error("Payment failed")
+
+    purchase_id = insert_purchase_record(id, data.game_id)
+    publish_event("GamePurchased", { "purchase_id": purchase_id })
+
+    return { "purchase_id": purchase_id }
+
+#6 Get Recommendations
+@app.get("/users/{id}/recommendations")
+def get_recommendations(id):
+    recs = read_recommendation_view(id)
+
+    if recs is None:
+        recs = compute_recommendations(id)
+
+    return recs
