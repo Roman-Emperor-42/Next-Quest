@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Game Preferences{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<p>Select the types of games you enjoy to get personalized recommendations.</p>
+
+<form method="post">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;">
+        {% for tag in all_tags %}
+        <label style="display: flex; align-items: center; padding: 10px; border: 2px solid var(--border-color); border-radius: 5px; cursor: pointer; background: {% if tag in current_tags %}var(--bg-card){% else %}var(--bg-secondary){% endif %};">
+            <input type="checkbox" name="tags" value="{{ tag }}" {% if tag in current_tags %}checked{% endif %} style="margin-right: 8px;">
+            <span>{{ tag }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    
+    <input type="submit" value="Save Preferences">
+    <a href="{{ url_for('recommendations.index') }}" style="margin-left: 10px;">Cancel</a>
+</form>
+
+<p class="help-text" style="margin-top: 20px;">
+    <strong>Tip:</strong> You can also tag individual games in your library to help improve recommendations for yourself and others!
+</p>
+{% endblock %}
+

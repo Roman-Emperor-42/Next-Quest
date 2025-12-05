@@ -2,6 +2,8 @@ DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS post;
 DROP TABLE IF EXISTS user_game_library;
 DROP TABLE IF EXISTS user_follows;
+DROP TABLE IF EXISTS game_tag;
+DROP TABLE IF EXISTS user_preferences;
 DROP TABLE IF EXISTS game;
 
 CREATE TABLE user (
@@ -50,4 +52,21 @@ CREATE TABLE user_follows (
                       FOREIGN KEY (following_id) REFERENCES user (id),
                       UNIQUE(follower_id, following_id),
                       CHECK(follower_id != following_id)
+);
+
+CREATE TABLE game_tag (
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      game_id INTEGER NOT NULL,
+                      tag TEXT NOT NULL,
+                      FOREIGN KEY (game_id) REFERENCES game (id),
+                      UNIQUE(game_id, tag)
+);
+
+CREATE TABLE user_preferences (
+                      id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      user_id INTEGER NOT NULL,
+                      tag TEXT NOT NULL,
+                      weight REAL DEFAULT 1.0,
+                      FOREIGN KEY (user_id) REFERENCES user (id),
+                      UNIQUE(user_id, tag)
 );

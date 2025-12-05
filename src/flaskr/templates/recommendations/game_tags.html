@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Tag: {{ game['name'] }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<p>Add tags to help improve recommendations for this game.</p>
+
+<form method="post">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;">
+        {% for tag in all_tags %}
+        <label style="display: flex; align-items: center; padding: 10px; border: 2px solid var(--border-color); border-radius: 5px; cursor: pointer; background: {% if tag in current_tags %}var(--bg-card){% else %}var(--bg-secondary){% endif %};">
+            <input type="checkbox" name="tags" value="{{ tag }}" {% if tag in current_tags %}checked{% endif %} style="margin-right: 8px;">
+            <span>{{ tag }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    
+    <input type="submit" value="Save Tags">
+    <a href="{{ url_for('steam.library') }}" style="margin-left: 10px;">Back to Library</a>
+</form>
+{% endblock %}
+

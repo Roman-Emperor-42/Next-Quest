@@ -41,6 +41,9 @@ def create_app(test_config=None):
     from . import social
     app.register_blueprint(social.bp)
     
+    from . import recommendations
+    app.register_blueprint(recommendations.bp)
+    
     # Set root route to library (or login if not authenticated)
     @app.route('/')
     def index():

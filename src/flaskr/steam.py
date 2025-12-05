@@ -1,7 +1,9 @@
 import random
 import requests
+import time
+import threading
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
 from flaskr.auth import login_required
@@ -108,7 +110,7 @@ def fetch_steam_library(steam_id):
         return None, f'Unexpected error: {str(e)}'
 
 
-def get_game_details(appid):
+def get_game_details(appid, retry_count=0):
     """
     Get game details from Steam Store API.
     Returns game info dict or None.
@@ -120,6 +122,18 @@ def get_game_details(appid):
             'l': 'en'
         }
         response = requests.get(url, params=params, timeout=10)
+        
+        # Handle rate limiting
+        if response.status_code == 429:
+            if retry_count < 3:
+                # Wait longer with each retry (exponential backoff)
+                wait_time = (2 ** retry_count) * 2  # 2s, 4s, 8s
+                time.sleep(wait_time)
+                return get_game_details(appid, retry_count + 1)
+            else:
+                print(f"Rate limited for game {appid} after {retry_count} retries")
+                return None
+        
         response.raise_for_status()
         data = response.json()
         
@@ -127,8 +141,161 @@ def get_game_details(appid):
             return data[str(appid)]['data']
         return None
     except requests.RequestException as e:
-        print(f"Error fetching game details: {e}")
+        if "429" not in str(e):  # Don't print rate limit errors, we handle them above
+            print(f"Error fetching game details: {e}")
         return None
+
+
+def fetch_tags_background(app, games_to_tag):
+    """
+    Background function to fetch tags for games.
+    Runs in a separate thread to avoid blocking the import.
+    """
+    with app.app_context():
+        import sqlite3
+        from flask import current_app
+        
+        # Create a new database connection for this thread
+        db_path = current_app.config['DATABASE']
+        conn = sqlite3.connect(db_path, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        db = conn
+        
+        tagged_count = 0
+        
+        try:
+            for game_info in games_to_tag:
+                try:
+                    # Add delay between requests to avoid rate limiting
+                    # Steam allows ~200 requests per 5 minutes, so ~1 request per 1.5 seconds is safe
+                    time.sleep(1.5)
+                    
+                    appid = game_info['appid']
+                    game_id = game_info['game_id']
+                    
+                    steam_tags = get_game_tags_from_steam(appid)
+                    if steam_tags:
+                        # Remove existing tags for this game
+                        db.execute('DELETE FROM game_tag WHERE game_id = ?', (game_id,))
+                        
+                        # Add new tags
+                        for tag in steam_tags:
+                            try:
+                                db.execute(
+                                    'INSERT INTO game_tag (game_id, tag) VALUES (?, ?)',
+                                    (game_id, tag)
+                                )
+                            except sqlite3.IntegrityError:
+                                pass  # Tag already exists
+                        tagged_count += 1
+                        db.commit()
+                except Exception as e:
+                    # If we hit rate limits, wait longer and continue
+                    if "429" in str(e) or "Too Many Requests" in str(e):
+                        print(f"Rate limited for game {appid}, waiting longer...")
+                        time.sleep(10)  # Wait 10 seconds before continuing
+                    else:
+                        print(f"Error fetching tags for game {appid}: {e}")
+        finally:
+            conn.close()
+        
+        print(f"Background tag fetching completed. Tagged {tagged_count} games.")
+
+
+def get_game_tags_from_steam(appid):
+    """
+    Get game tags from Steam Store API.
+    Returns list of tag strings or empty list.
+    """
+    try:
+        game_details = get_game_details(appid)
+        if not game_details:
+            return []
+        
+        tags = []
+        
+        # Steam API returns genres
+        if 'genres' in game_details:
+            for genre in game_details['genres']:
+                if 'description' in genre:
+                    tags.append(genre['description'])
+        
+        # Get categories (these include tags like "Single-player", "Multi-player", etc.)
+        if 'categories' in game_details:
+            for category in game_details['categories']:
+                if 'description' in category:
+                    cat_desc = category['description']
+                    # Map Steam categories to our tag system
+                    if 'Single-player' in cat_desc:
+                        tags.append('Singleplayer')
+                    elif 'Multi-player' in cat_desc:
+                        tags.append('Multiplayer')
+                    elif 'Co-op' in cat_desc:
+                        tags.append('Co-op')
+                    elif 'Competitive' in cat_desc:
+                        tags.append('Competitive')
+        
+        # Normalize tags to match our POPULAR_TAGS list
+        # These should match the tags in recommendations.py
+        POPULAR_TAGS = [
+            'Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports',
+            'Racing', 'Puzzle', 'Indie', 'Casual', 'Multiplayer', 'Singleplayer',
+            'FPS', 'Horror', 'Sci-Fi', 'Fantasy', 'Open World', 'Story Rich',
+            'Co-op', 'Competitive', 'Sandbox', 'Survival', 'Crafting', 'Building'
+        ]
+        normalized_tags = []
+        tag_mapping = {
+            'Action': 'Action',
+            'Adventure': 'Adventure',
+            'RPG': 'RPG',
+            'Role-playing': 'RPG',
+            'Strategy': 'Strategy',
+            'Simulation': 'Simulation',
+            'Sports': 'Sports',
+            'Racing': 'Racing',
+            'Puzzle': 'Puzzle',
+            'Indie': 'Indie',
+            'Casual': 'Casual',
+            'First-Person Shooter': 'FPS',
+            'FPS': 'FPS',
+            'Horror': 'Horror',
+            'Sci-Fi': 'Sci-Fi',
+            'Science Fiction': 'Sci-Fi',
+            'Fantasy': 'Fantasy',
+            'Open World': 'Open World',
+            'Story Rich': 'Story Rich',
+            'Co-op': 'Co-op',
+            'Cooperative': 'Co-op',
+            'Competitive': 'Competitive',
+            'Sandbox': 'Sandbox',
+            'Survival': 'Survival',
+            'Crafting': 'Crafting',
+            'Building': 'Building',
+            'Single-player': 'Singleplayer',
+            'Singleplayer': 'Singleplayer',
+            'Multi-player': 'Multiplayer',
+            'Multiplayer': 'Multiplayer'
+        }
+        
+        for tag in tags:
+            # Try exact match first
+            if tag in tag_mapping:
+                normalized = tag_mapping[tag]
+                if normalized in POPULAR_TAGS and normalized not in normalized_tags:
+                    normalized_tags.append(normalized)
+            # Try case-insensitive match
+            else:
+                tag_lower = tag.lower()
+                for key, value in tag_mapping.items():
+                    if key.lower() == tag_lower:
+                        if value in POPULAR_TAGS and value not in normalized_tags:
+                            normalized_tags.append(value)
+                        break
+        
+        return normalized_tags
+    except Exception as e:
+        print(f"Error fetching game tags for appid {appid}: {e}")
+        return []
 
 
 @bp.route('/import', methods=('GET', 'POST'))
@@ -164,6 +331,8 @@ def import_library():
             db = get_db()
             imported_count = 0
             updated_count = 0
+            tag_fetch_enabled = request.form.get('fetch_tags', 'true') == 'true'
+            games_to_tag = []  # Store games that need tags fetched
             
             for game_data in games:
                 appid = game_data.get('appid')
@@ -195,6 +364,13 @@ def import_library():
                     'SELECT id FROM game WHERE appid = ? AND platform = ?', (str(appid), 'steam')
                 ).fetchone()
                 
+                # Store game info for background tag fetching
+                if tag_fetch_enabled:
+                    games_to_tag.append({
+                        'game_id': game['id'],
+                        'appid': appid
+                    })
+                
                 # Insert or update user_game_library
                 try:
                     db.execute(
@@ -212,7 +388,20 @@ def import_library():
                     )
             
             db.commit()
-            flash(f'Successfully imported {imported_count} new games and updated {updated_count} existing games!')
+            
+            # Start background thread to fetch tags
+            if tag_fetch_enabled and games_to_tag:
+                thread = threading.Thread(
+                    target=fetch_tags_background,
+                    args=(current_app._get_current_object(), games_to_tag),
+                    daemon=True
+                )
+                thread.start()
+                message = f'Successfully imported {imported_count} new games and updated {updated_count} existing games! Tags are being fetched in the background.'
+            else:
+                message = f'Successfully imported {imported_count} new games and updated {updated_count} existing games!'
+            
+            flash(message)
             return redirect(url_for('steam.library'))
         
         flash(error)

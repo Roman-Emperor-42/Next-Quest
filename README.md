@@ -19,7 +19,7 @@ Contributors names and contact info
 
 ## Installing/Using
 
-In Terminal/Command line navigate to the directory you cloned to and run the command
+In Terminal/Command line navigate to the directory you cloned to and run the command (src)
 
 ```pip install -e .```
 
@@ -39,30 +39,11 @@ To use the Steam library importer, you need a Steam Web API key:
    STEAM_API_KEY = 'your_api_key_here'
    ```
 
-#### Epic Games Ecom API Setup
-
-To use the Epic Games Ecom API importer, you need Epic Games developer credentials:
-
-1. Register as an Epic Games developer and create an application at [Epic Games Developer Portal](https://dev.epicgames.com/)
-2. Get your Client ID and Client Secret from your application settings
-3. Set them as environment variables:
-   ```bash
-   export EPIC_CLIENT_ID=your_client_id_here
-   export EPIC_CLIENT_SECRET=your_client_secret_here
-   export EPIC_DEPLOYMENT_ID=prod  # or 'dev' for development
-   ```
-   Or add them to your Flask instance config in `instance/config.py`:
-   ```python
-   EPIC_CLIENT_ID = 'your_client_id_here'
-   EPIC_CLIENT_SECRET = 'your_client_secret_here'
-   EPIC_DEPLOYMENT_ID = 'prod'
-   ```
-
-**Note:** The Epic Games Ecom API requires partner access. If you don't have API credentials, you can still import Epic Games manually.
-
 ### Running the Application
 
 you can now run the project with the command (debug is optional)
+
+```flask --app flaskr init-db```
 
 ```flask --app flaskr run --debug```
 

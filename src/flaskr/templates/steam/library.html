@@ -93,9 +93,14 @@ window.addEventListener('DOMContentLoaded', function() {
                     {% endif %}
                 </div>
             </header>
-            <form method="post" action="{{ url_for('steam.remove_game', game_id=game['id']) }}" style="margin-top: 10px;">
-                <input type="submit" value="Remove" onclick="return confirm('Remove this game from your library?');">
-            </form>
+            <div style="margin-top: 10px;">
+                <a href="{{ url_for('recommendations.manage_game_tags', game_id=game['id']) }}" style="margin-right: 10px; font-size: 0.9em;">
+                    Tag Game
+                </a>
+                <form method="post" action="{{ url_for('steam.remove_game', game_id=game['id']) }}" style="display: inline;">
+                    <input type="submit" value="Remove" onclick="return confirm('Remove this game from your library?');">
+                </form>
+            </div>
         </div>
     </article>
     {% if not loop.last %}

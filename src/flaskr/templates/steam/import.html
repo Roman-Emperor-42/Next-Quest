@@ -30,6 +30,14 @@
             <li>Your Steam Web API key must be configured (set STEAM_API_KEY environment variable).</li>
         </ul>
     </p>
+    <label style="display: flex; align-items: center; margin: 15px 0;">
+        <input type="checkbox" name="fetch_tags" value="true" checked>
+        <span style="margin-left: 8px;">Automatically fetch game tags from Steam in the background (improves recommendations)</span>
+    </label>
+    <p class="help-text" style="font-size: 0.85em; color: #666;">
+        <strong>Note:</strong> Tags are fetched in the background after import completes, so your import will be fast. 
+        Tags will appear in your library as they're fetched.
+    </p>
     <input type="submit" value="Import Library">
 </form>
 {% endblock %}
