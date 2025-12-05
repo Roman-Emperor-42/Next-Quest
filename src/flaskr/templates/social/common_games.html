@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Common Games with {{ other_user['username'] }}{% endblock %}</h1>
+{% if g.user %}
+<div style="display: flex; gap: 10px;">
+    {% if not is_following %}
+    <form method="post" action="{{ url_for('social.follow_user', user_id=other_user['id']) }}" style="display: inline;">
+        <input type="submit" value="Follow {{ other_user['username'] }}">
+    </form>
+    {% else %}
+    <form method="post" action="{{ url_for('social.unfollow_user', user_id=other_user['id']) }}" style="display: inline;">
+        <input type="submit" value="Unfollow" style="background: #f44336;">
+    </form>
+    {% endif %}
+    <a class="action" href="{{ url_for('social.users') }}">Browse Users</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if common_games %}
+<p>You have <strong>{{ common_games|length }}</strong> game{{ 's' if common_games|length != 1 else '' }} in common with {{ other_user['username'] }}.</p>
+
+<div class="sort-controls" style="margin-bottom: 20px;">
+    <label for="sort">Sort by:</label>
+    <select id="sort" onchange="updateSort()" style="margin-right: 10px;">
+        <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Relevance (Recommended)</option>
+        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+        <option value="playtime" {% if sort_by == 'playtime' %}selected{% endif %}>Total Playtime</option>
+        <option value="my_playtime" {% if sort_by == 'my_playtime' %}selected{% endif %}>My Playtime</option>
+        <option value="their_playtime" {% if sort_by == 'their_playtime' %}selected{% endif %}>Their Playtime</option>
+    </select>
+    <label for="order">Order:</label>
+    <select id="order" onchange="updateSort()">
+        <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+        <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+    </select>
+</div>
+<p class="help-text" style="margin-top: -15px; margin-bottom: 20px;">
+    <strong>Relevance</strong> favors games where both of you have significant playtime, while still considering total playtime.
+    <br>Example: A game with 30h + 20h is more relevant than 40h + 10h (both total 50h), but both are more relevant than 5min + 5min.
+</p>
+
+<script>
+function updateSort() {
+    const sortBy = document.getElementById('sort').value;
+    const order = document.getElementById('order').value;
+    window.location.href = '{{ url_for("social.common_games", user_id=other_user["id"]) }}?sort=' + sortBy + '&order=' + order;
+}
+</script>
+
+<div class="games-grid">
+    {% for game in common_games %}
+    <article class="game">
+        <div style="margin-right: 15px; flex-shrink: 0;">
+            <a href="https://store.steampowered.com/app/{{ game['appid'] }}" target="_blank">
+                <img src="https://cdn.akamai.steamstatic.com/steam/apps/{{ game['appid'] }}/header.jpg" 
+                     alt="{{ game['name'] }}" 
+                     style="width: 460px; height: 215px; object-fit: cover;"
+                     onerror="this.src='https://media.steampowered.com/steamcommunity/public/images/apps/{{ game['appid'] }}/{{ game['img_logo_url'] }}.jpg'; this.style.width='184px'; this.style.height='69px';">
+            </a>
+        </div>
+        <div style="flex-grow: 1;">
+            <header>
+                <h2 style="margin-top: 0;">
+                    <a href="https://store.steampowered.com/app/{{ game['appid'] }}" target="_blank">
+                        {{ game['name'] }}
+                    </a>
+                </h2>
+                <div class="about">
+                    <strong>My Playtime:</strong> {{ (game['my_playtime'] / 60)|round(1) }} hours
+                    <br><strong>{{ other_user['username'] }}'s Playtime:</strong> {{ (game['their_playtime'] / 60)|round(1) }} hours
+                    <br><strong>Total Combined:</strong> {{ (game['total_playtime'] / 60)|round(1) }} hours
+                </div>
+            </header>
+        </div>
+    </article>
+    {% if not loop.last %}
+    <hr>
+    {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<p>You don't have any games in common with {{ other_user['username'] }} yet.</p>
+{% endif %}
+{% endblock %}
+

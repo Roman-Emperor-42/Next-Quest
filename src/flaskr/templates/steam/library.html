@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}My Game Library{% endblock %}</h1>
+{% if g.user %}
+<a class="action" href="{{ url_for('steam.import_library') }}">Import from Steam</a>
+{% if games %}
+<a class="action" href="{{ url_for('steam.random_game') }}" style="background: #4CAF50; color: white; margin-left: 10px;">🎲 Random Game</a>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if games %}
+<p>You have {{ games|length }} game{{ 's' if games|length != 1 else '' }} in your library.</p>
+
+<div class="sort-controls" style="margin-bottom: 20px;">
+    <label for="sort">Sort by:</label>
+    <select id="sort" onchange="updateSort()" style="margin-right: 10px;">
+        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
+        <option value="playtime" {% if sort_by == 'playtime' %}selected{% endif %}>Playtime</option>
+        <option value="imported" {% if sort_by == 'imported' %}selected{% endif %}>Date Imported</option>
+    </select>
+    <label for="order">Order:</label>
+    <select id="order" onchange="updateSort()">
+        <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+        <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Descending</option>
+    </select>
+</div>
+
+<script>
+function updateSort() {
+    const sortBy = document.getElementById('sort').value;
+    const order = document.getElementById('order').value;
+    window.location.href = '{{ url_for("steam.library") }}?sort=' + sortBy + '&order=' + order;
+}
+
+// Highlight random game if one is selected
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight');
+    
+    if (highlightId) {
+        // Wait a bit for page to fully render
+        setTimeout(function() {
+            const highlightedGame = document.getElementById('game-' + highlightId);
+            if (highlightedGame) {
+                // Scroll to the game
+                highlightedGame.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Add highlight styles
+                highlightedGame.style.border = '4px solid #4CAF50';
+                highlightedGame.style.boxShadow = '0 0 30px rgba(76, 175, 80, 0.6)';
+                highlightedGame.style.backgroundColor = 'rgba(76, 175, 80, 0.15)';
+                highlightedGame.style.transition = 'all 0.3s ease';
+                highlightedGame.style.transform = 'scale(1.02)';
+                
+                // Remove highlight after 5 seconds
+                setTimeout(function() {
+                    highlightedGame.style.border = '';
+                    highlightedGame.style.boxShadow = '';
+                    highlightedGame.style.backgroundColor = '';
+                    highlightedGame.style.transform = '';
+                }, 5000);
+            }
+        }, 300);
+    }
+});
+</script>
+
+<div class="games-grid">
+    {% for game in games %}
+    <article class="game" id="game-{{ game['id'] }}" {% if highlight_id == game['id'] %}data-highlighted="true"{% endif %}>
+        <div style="margin-right: 15px; flex-shrink: 0;">
+            <a href="https://store.steampowered.com/app/{{ game['appid'] }}" target="_blank">
+                <img src="https://cdn.akamai.steamstatic.com/steam/apps/{{ game['appid'] }}/header.jpg" 
+                     alt="{{ game['name'] }}" 
+                     style="width: 460px; height: 215px; object-fit: cover;"
+                     onerror="this.src='https://media.steampowered.com/steamcommunity/public/images/apps/{{ game['appid'] }}/{{ game['img_logo_url'] }}.jpg'; this.style.width='184px'; this.style.height='69px';">
+            </a>
+        </div>
+        <div style="flex-grow: 1;">
+            <header>
+                <h2 style="margin-top: 0;">
+                    <a href="https://store.steampowered.com/app/{{ game['appid'] }}" target="_blank">
+                        {{ game['name'] }}
+                    </a>
+                </h2>
+                <div class="about">
+                    <strong>Playtime:</strong> {{ (game['user_playtime'] / 60)|round(1) }} hours
+                    {% if game['imported_at'] %}
+                    <br><strong>Imported:</strong> {{ game['imported_at'].strftime('%Y-%m-%d') }}
+                    {% endif %}
+                </div>
+            </header>
+            <div style="margin-top: 10px;">
+                <a href="{{ url_for('recommendations.manage_game_tags', game_id=game['id']) }}" style="margin-right: 10px; font-size: 0.9em;">
+                    Tag Game
+                </a>
+                <form method="post" action="{{ url_for('steam.remove_game', game_id=game['id']) }}" style="display: inline;">
+                    <input type="submit" value="Remove" onclick="return confirm('Remove this game from your library?');">
+                </form>
+            </div>
+        </div>
+    </article>
+    {% if not loop.last %}
+    <hr>
+    {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<p>Your library is empty. <a href="{{ url_for('steam.import_library') }}">Import your Steam library</a> to get started!</p>
+{% endif %}
+{% endblock %}
+

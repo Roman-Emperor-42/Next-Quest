@@ -1,0 +1,246 @@
+/* CSS Variables for Theming */
+:root {
+    --bg-primary: #eee;
+    --bg-secondary: white;
+    --bg-nav: lightgray;
+    --bg-card: #f9f9f9;
+    --bg-controls: #f0f0f0;
+    --text-primary: #333;
+    --text-secondary: slategray;
+    --text-muted: #666;
+    --link-color: #377ba8;
+    --link-hover: #2a5f8a;
+    --border-color: lightgray;
+    --border-card: #ddd;
+    --flash-bg: #cae6f6;
+    --flash-border: #377ba8;
+    --input-bg: white;
+    --input-text: #333;
+}
+
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-nav: #333;
+    --bg-card: #3a3a3a;
+    --bg-controls: #404040;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #888;
+    --link-color: #5ba3d4;
+    --link-hover: #7bb8e0;
+    --border-color: #555;
+    --border-card: #555;
+    --flash-bg: #2a4a5f;
+    --flash-border: #5ba3d4;
+    --input-bg: #3a3a3a;
+    --input-text: #e0e0e0;
+}
+
+html { 
+    font-family: sans-serif; 
+    background: var(--bg-primary); 
+    padding: 1rem; 
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+body { 
+    max-width: 960px; 
+    margin: 0 auto; 
+    background: var(--bg-secondary);
+    transition: background-color 0.3s ease;
+}
+h1 { 
+    font-family: serif; 
+    color: var(--link-color); 
+    margin: 1rem 0; 
+}
+a { 
+    color: var(--link-color); 
+    transition: color 0.2s ease;
+}
+a:hover {
+    color: var(--link-hover);
+}
+hr { 
+    border: none; 
+    border-top: 1px solid var(--border-color); 
+}
+nav { 
+    background: var(--bg-nav); 
+    display: flex; 
+    align-items: center; 
+    padding: 0 0.5rem; 
+    transition: background-color 0.3s ease;
+}
+nav h1 { 
+    flex: auto; 
+    margin: 0; 
+}
+nav h1 a { 
+    text-decoration: none; 
+    padding: 0.25rem 0.5rem; 
+}
+nav ul { 
+    display: flex; 
+    list-style: none; 
+    margin: 0; 
+    padding: 0; 
+}
+nav ul li a, nav ul li span, header .action { 
+    display: block; 
+    padding: 0.5rem; 
+}
+.theme-picker {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+.theme-picker button {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    min-width: 40px;
+    height: 36px;
+}
+.theme-picker button:hover {
+    background: var(--bg-card);
+    border-color: var(--link-color);
+}
+.theme-picker button:active {
+    transform: scale(0.95);
+}
+.content { 
+    padding: 0 1rem 1rem; 
+}
+.content > header { 
+    border-bottom: 1px solid var(--border-color); 
+    display: flex; 
+    align-items: flex-end; 
+}
+.content > header h1 { 
+    flex: auto; 
+    margin: 1rem 0 0.25rem 0; 
+}
+.flash { 
+    margin: 1em 0; 
+    padding: 1em; 
+    background: var(--flash-bg); 
+    border: 1px solid var(--flash-border); 
+    border-radius: 5px;
+}
+.post > header { 
+    display: flex; 
+    align-items: flex-end; 
+    font-size: 0.85em; 
+}
+.post > header > div:first-of-type { 
+    flex: auto; 
+}
+.post > header h1 { 
+    font-size: 1.5em; 
+    margin-bottom: 0; 
+}
+.post .about { 
+    color: var(--text-secondary); 
+    font-style: italic; 
+}
+.post .body { 
+    white-space: pre-line; 
+}
+.content:last-child { 
+    margin-bottom: 0; 
+}
+.content form { 
+    margin: 1em 0; 
+    display: flex; 
+    flex-direction: column; 
+}
+.content label { 
+    font-weight: bold; 
+    margin-bottom: 0.5em; 
+    color: var(--text-primary);
+}
+.content input, .content textarea { 
+    margin-bottom: 1em; 
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--border-color);
+    padding: 8px;
+    border-radius: 3px;
+}
+.content textarea { 
+    min-height: 12em; 
+    resize: vertical; 
+}
+input.danger { 
+    color: #cc2f2e; 
+}
+input[type=submit] { 
+    align-self: start; 
+    min-width: 10em; 
+    cursor: pointer;
+    background: var(--link-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+}
+input[type=submit]:hover {
+    background: var(--link-hover);
+}
+.game { 
+    display: flex; 
+    align-items: flex-start; 
+    margin-bottom: 20px; 
+    padding: 15px; 
+    border: 1px solid var(--border-card); 
+    border-radius: 5px; 
+    background: var(--bg-card);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.game img { 
+    border-radius: 3px; 
+}
+.game h2 a:hover { 
+    color: var(--link-hover); 
+    text-decoration: underline; 
+}
+.sort-controls { 
+    margin-bottom: 20px; 
+    padding: 10px; 
+    background: var(--bg-controls); 
+    border-radius: 5px; 
+    transition: background-color 0.3s ease;
+}
+.sort-controls label { 
+    margin-right: 5px; 
+    color: var(--text-primary);
+}
+.sort-controls select { 
+    padding: 5px; 
+    margin-right: 15px; 
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    cursor: pointer;
+}
+.help-text { 
+    font-size: 0.9em; 
+    color: var(--text-muted); 
+    margin: 0.5em 0; 
+}
+.help-text ul { 
+    margin: 0.5em 0; 
+    padding-left: 20px; 
+}

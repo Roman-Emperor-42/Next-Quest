@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Browse Users{% endblock %}</h1>
+{% if g.user %}
+<a class="action" href="{{ url_for('social.following') }}">Following</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<form method="get" style="margin-bottom: 20px;">
+    <label for="search">Search users:</label>
+    <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Enter username...">
+    <input type="submit" value="Search">
+    {% if search_query %}
+    <a href="{{ url_for('social.users') }}" style="margin-left: 10px;">Clear</a>
+    {% endif %}
+</form>
+
+{% if users %}
+<p>Found {{ users|length }} user{{ 's' if users|length != 1 else '' }}.</p>
+<ul style="list-style: none; padding: 0;">
+    {% for user in users %}
+    <li style="padding: 15px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-card);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <strong><a href="{{ url_for('social.common_games', user_id=user['id']) }}">{{ user['username'] }}</a></strong>
+            </div>
+            <div>
+                {% if user['id'] in following_ids %}
+                <form method="post" action="{{ url_for('social.unfollow_user', user_id=user['id']) }}" style="display: inline;">
+                    <input type="submit" value="Unfollow" style="background: #f44336;">
+                </form>
+                {% else %}
+                <form method="post" action="{{ url_for('social.follow_user', user_id=user['id']) }}" style="display: inline;">
+                    <input type="submit" value="Follow">
+                </form>
+                {% endif %}
+                <a href="{{ url_for('social.common_games', user_id=user['id']) }}" style="margin-left: 10px;">View Common Games</a>
+            </div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No users found{% if search_query %} matching "{{ search_query }}"{% endif %}.</p>
+{% endif %}
+{% endblock %}
+

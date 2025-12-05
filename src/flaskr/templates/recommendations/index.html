@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Game Recommendations{% endblock %}</h1>
+{% if g.user %}
+<a class="action" href="{{ url_for('recommendations.preferences') }}">Manage Preferences</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if not has_preferences %}
+<div class="help-text" style="padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; margin-bottom: 20px;">
+    <strong>Get Started:</strong> To receive personalized recommendations, 
+    <a href="{{ url_for('recommendations.preferences') }}">select your preferred game tags</a>.
+    <br>You can also tag games in your library to help improve recommendations!
+</div>
+{% endif %}
+
+{% if recommendations %}
+<p>Found <strong>{{ recommendations|length }}</strong> game{{ 's' if recommendations|length != 1 else '' }} you might like.</p>
+
+<div class="games-grid">
+    {% for rec in recommendations %}
+    <article class="game">
+        <div style="margin-right: 15px; flex-shrink: 0;">
+            <a href="https://store.steampowered.com/app/{{ rec['game']['appid'] }}" target="_blank">
+                <img src="https://cdn.akamai.steamstatic.com/steam/apps/{{ rec['game']['appid'] }}/header.jpg" 
+                     alt="{{ rec['game']['name'] }}" 
+                     style="width: 460px; height: 215px; object-fit: cover;"
+                     onerror="this.src='https://media.steampowered.com/steamcommunity/public/images/apps/{{ rec['game']['appid'] }}/{{ rec['game']['img_logo_url'] }}.jpg'; this.style.width='184px'; this.style.height='69px';">
+            </a>
+        </div>
+        <div style="flex-grow: 1;">
+            <header>
+                <h2 style="margin-top: 0;">
+                    <a href="https://store.steampowered.com/app/{{ rec['game']['appid'] }}" target="_blank">
+                        {{ rec['game']['name'] }}
+                    </a>
+                </h2>
+                <div class="about">
+                    <strong>Why recommended:</strong> {{ rec['reason'] }}
+                    <br><strong>Relevance Score:</strong> {{ rec['score']|round(1) }}
+                </div>
+            </header>
+            <div style="margin-top: 10px;">
+                <a href="{{ url_for('recommendations.manage_game_tags', game_id=rec['game']['id']) }}" style="font-size: 0.9em;">
+                    Tag this game
+                </a>
+            </div>
+        </div>
+    </article>
+    {% if not loop.last %}
+    <hr>
+    {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<p>No recommendations available yet.</p>
+{% if not has_preferences %}
+<p><a href="{{ url_for('recommendations.preferences') }}">Set your preferences</a> to get personalized recommendations!</p>
+{% endif %}
+{% endif %}
+{% endblock %}
+
