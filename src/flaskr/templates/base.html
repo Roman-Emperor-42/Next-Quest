@@ -6,11 +6,18 @@
     <ul>
         {% if g.user %}
         <li><span>{{ g.user['username'] }}</span>
+        <li><a href="{{ url_for('steam.library') }}">My Library</a>
+        <li><a href="{{ url_for('social.users') }}">Users</a>
         <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
             {% else %}
         <li><a href="{{ url_for('auth.register') }}">Register</a>
         <li><a href="{{ url_for('auth.login') }}">Log In</a>
             {% endif %}
+        <li class="theme-picker">
+            <button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </li>
     </ul>
 </nav>
 <section class="content">
@@ -22,3 +29,35 @@
     {% endfor %}
     {% block content %}{% endblock %}
 </section>
+<script>
+// Theme management
+function setTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        updateThemeIcon('☀️');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        updateThemeIcon('🌙');
+    }
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+}
+
+function updateThemeIcon(icon) {
+    const iconElement = document.getElementById('theme-icon');
+    if (iconElement) {
+        iconElement.textContent = icon;
+    }
+}
+
+// Load saved theme on page load
+(function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+})();
+</script>

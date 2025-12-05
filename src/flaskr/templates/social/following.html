@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Following{% endblock %}</h1>
+{% if g.user %}
+<a class="action" href="{{ url_for('social.users') }}">Browse Users</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if following %}
+<p>You are following {{ following|length }} user{{ 's' if following|length != 1 else '' }}.</p>
+<ul style="list-style: none; padding: 0;">
+    {% for user in following %}
+    <li style="padding: 15px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-card);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <strong><a href="{{ url_for('social.common_games', user_id=user['id']) }}">{{ user['username'] }}</a></strong>
+                <br><span class="about">Following since {{ user['created_at'].strftime('%Y-%m-%d') }}</span>
+            </div>
+            <div>
+                <form method="post" action="{{ url_for('social.unfollow_user', user_id=user['id']) }}" style="display: inline;">
+                    <input type="submit" value="Unfollow" style="background: #f44336;">
+                </form>
+                <a href="{{ url_for('social.common_games', user_id=user['id']) }}" style="margin-left: 10px;">View Common Games</a>
+            </div>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>You are not following anyone yet. <a href="{{ url_for('social.users') }}">Browse users</a> to get started!</p>
+{% endif %}
+{% endblock %}
+

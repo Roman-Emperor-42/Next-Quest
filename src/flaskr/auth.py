@@ -32,6 +32,14 @@ def register():
             except db.IntegrityError:
                 error = f"User {username} is already registered."
             else:
+                # Auto-login the new user and redirect to library
+                user = db.execute(
+                    'SELECT * FROM user WHERE username = ?', (username,)
+                ).fetchone()
+                if user:
+                    session.clear()
+                    session['user_id'] = user['id']
+                    return redirect(url_for('steam.library'))
                 return redirect(url_for("auth.login"))
 
         flash(error)

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Import Steam Library{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+    <label for="steam_id">Steam ID or Profile Username</label>
+    <input name="steam_id" id="steam_id" 
+           placeholder="e.g., 76561198000000000 or your-username" 
+           required>
+    <p class="help-text">
+        <strong>Accepted formats:</strong>
+        <ul>
+            <li>Steam ID64 (17 digits): <code>76561198000000000</code></li>
+            <li>Profile username: <code>your-username</code></li>
+            <li>Full profile URL: <code>https://steamcommunity.com/id/your-username</code></li>
+            <li>Full profile URL: <code>https://steamcommunity.com/profiles/76561198000000000</code></li>
+        </ul>
+    </p>
+    <p class="help-text">
+        You can find your Steam ID at <a href="https://steamid.io" target="_blank">steamid.io</a> 
+        or use your Steam profile username (the part after /id/ in your profile URL).
+    </p>
+    <p class="help-text">
+        <strong>Important:</strong> 
+        <ul>
+            <li>Make sure your Steam profile is set to <strong>public</strong>, or the import will fail.</li>
+            <li>Your Steam Web API key must be configured (set STEAM_API_KEY environment variable).</li>
+        </ul>
+    </p>
+    <input type="submit" value="Import Library">
+</form>
+{% endblock %}
+

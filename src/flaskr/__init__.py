@@ -35,8 +35,18 @@ def create_app(test_config=None):
     from . import auth
     app.register_blueprint(auth.bp)
 
-    from . import blog
-    app.register_blueprint(blog.bp)
-    app.add_url_rule('/', endpoint='index')
+    from . import steam
+    app.register_blueprint(steam.bp)
+    
+    from . import social
+    app.register_blueprint(social.bp)
+    
+    # Set root route to library (or login if not authenticated)
+    @app.route('/')
+    def index():
+        from flask import redirect, url_for, session
+        if session.get('user_id'):
+            return redirect(url_for('steam.library'))
+        return redirect(url_for('auth.login'))
 
     return app
